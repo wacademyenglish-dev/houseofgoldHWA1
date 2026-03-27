@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLF LABS | Homework: House of Gold (A1)</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        spotify: {
+                            base: '#121212',
+                            surface: '#181818',
+                            elevated: '#282828',
+                            subtext: '#B3B3B3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #FFFFFF;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Ambient Orbs (Blue Theme) */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.15;
+            animation: float 15s infinite ease-in-out alternate;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background-color: #3B82F6; }
+        .orb-2 { bottom: -10%; right: -10%; width: 70vw; height: 70vw; background-color: #0D9488; animation-delay: -4s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.05); }
+        }
+
+        /* Abstract Background Lines */
+        .bg-lines {
+            position: fixed; inset: 0; z-index: -2; opacity: 0.05;
+            background-image: linear-gradient(#3B82F6 1px, transparent 1px), linear-gradient(90deg, #3B82F6 1px, transparent 1px);
+            background-size: 80px 80px;
+            transform: perspective(500px) rotateX(60deg) scale(2.5);
+            transform-origin: top;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(18, 18, 18, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-card {
+            background: rgba(24, 24, 24, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-red { animation: pulseRed 0.4s ease-out; }
+        @keyframes pulseRed { 0% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: transparent; } }
+
+        .pulse-blue { animation: pulseBlue 0.4s ease-out; }
+        @keyframes pulseBlue { 0% { background-color: rgba(59, 130, 246, 0.3); } 100% { background-color: transparent; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 10px; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; touch-action: none; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
+            background: #3B82F6; cursor: pointer; margin-top: -10px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        /* Word Chips (Lyric Builder) */
+        .word-chip { 
+            cursor: pointer; touch-action: manipulation; 
+            border-radius: 500px !important; background-color: #3B82F6 !important; color: #FFF !important; font-weight: 800 !important;
+            border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .word-chip:active { transform: scale(0.92); opacity: 0.9; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.5); }
+        .word-chip.selected { box-shadow: 0 0 0 4px rgba(255,255,255,0.3), 0 0 20px rgba(59, 130, 246, 0.8); transform: scale(1.05); }
+
+        /* Drop Zones */
+        .drop-zone {
+            border: 2px dashed rgba(59, 130, 246, 0.3) !important;
+            background: rgba(0,0,0,0.3) !important;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .drop-zone.filled {
+            border-style: solid !important;
+            border-color: rgba(59, 130, 246, 0.6) !important;
+            background: rgba(59, 130, 246, 0.05) !important;
+        }
+
+        /* Epic Start Button */
+        .btn-start-epic {
+            position: relative;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3B82F6;
+            color: #3B82F6;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.1);
+        }
+        .btn-start-epic:hover {
+            background: #3B82F6;
+            color: #FFF;
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px) scale(1.02);
+        }
+        .btn-start-epic:active { transform: scale(0.96); }
+
+        /* Safe Scrolling Wrapper (Prevents Cut-offs) */
+        .safe-scroll-wrapper {
+            min-height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen text-spotify-text text-sm">
+
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="bg-lines"></div>
+
+    <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden opacity-[0.03]">
+        <i data-lucide="edit-3" class="absolute top-[15%] left-[10%] w-24 h-24 text-white transform -rotate-12"></i>
+        <i data-lucide="book-open" class="absolute top-[65%] right-[15%] w-32 h-32 text-blue-500 transform rotate-45"></i>
+    </div>
+
+    <!-- TOP NAV -->
+    <header class="glass fixed top-0 w-full z-50 h-16 flex items-center justify-between px-4 md:px-6">
+        <div class="flex items-center gap-3">
+            <button onclick="app.goHome()" class="text-white/60 hover:text-white transition rounded-full p-2 bg-white/5 hover:bg-white/10">
+                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <div class="flex items-center gap-2 ml-2">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                    <i data-lucide="edit-3" class="text-white w-4 h-4"></i>
+                </div>
+                <span class="font-black tracking-widest text-sm md:text-base">WOLF <span class="text-blue-500">LABS</span></span>
+            </div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div id="status-bar" class="hidden items-center gap-3 md:gap-5 bg-black/40 px-4 py-1.5 rounded-full border border-white/10 backdrop-blur-md shadow-lg">
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="heart" class="text-red-500 w-4 h-4 fill-red-500"></i>
+                <span id="hp-display" class="font-bold text-xs md:text-sm text-white">100 HP</span>
+            </div>
+            <div class="w-px h-4 bg-white/20"></div>
+            <div class="flex items-center gap-1.5">
+                <i data-lucide="zap" class="text-blue-500 w-4 h-4"></i>
+                <span id="xp-display" class="font-bold text-xs md:text-sm text-white">0 XP</span>
+            </div>
+        </div>
+
+        <button onclick="app.toggleFullscreen()" class="text-white/60 hover:text-white p-2 bg-white/5 rounded-full transition hover:bg-white/10">
+            <i data-lucide="maximize" id="fs-icon" class="w-5 h-5"></i>
+        </button>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main id="main-container" class="flex-1 mt-16 mb-24 overflow-y-auto overflow-x-hidden relative w-full">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <!-- NAVIGATION BAR (BOTTOM) -->
+    <footer class="glass fixed bottom-0 w-full h-20 md:h-24 flex items-center justify-between px-4 md:px-8 z-50">
+        <!-- Track Info -->
+        <div class="flex items-center gap-3 w-1/4 min-w-[100px]">
+            <div class="w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-2xl overflow-hidden relative border border-white/10 shrink-0 hidden sm:block">
+                <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover opacity-60" alt="Album Art">
+            </div>
+            <div class="flex flex-col min-w-0">
+                <span class="font-black text-white text-xs md:text-sm truncate tracking-tight" id="player-title">Homework Module</span>
+                <span class="text-[9px] md:text-[11px] text-blue-500 truncate font-bold uppercase tracking-widest mt-0.5" id="player-artist">House of Gold • A1</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center justify-center gap-6 md:gap-10 w-2/4">
+            <button onclick="app.prevSlide()" class="text-white/40 hover:text-white transition bg-white/5 p-3 md:p-4 rounded-full hover:bg-white/10 hover:scale-110 active:scale-95" id="btn-prev">
+                <i data-lucide="arrow-left" class="w-5 h-5 md:w-6 md:h-6"></i>
+            </button>
+            <button onclick="app.nextSlide()" class="text-white/40 hover:text-white transition bg-white/5 p-3 md:p-4 rounded-full hover:bg-white/10 hover:scale-110 active:scale-95" id="btn-next">
+                <i data-lucide="arrow-right" class="w-5 h-5 md:w-6 md:h-6"></i>
+            </button>
+        </div>
+
+        <!-- Progress -->
+        <div class="flex items-center justify-end w-1/4 gap-3 md:gap-4">
+            <div class="flex flex-col items-end gap-1.5 w-full">
+                <div class="flex items-center justify-end w-full gap-1 text-[10px] md:text-xs font-black text-white/50 tracking-widest">
+                    <span id="progress-current" class="text-white">0</span>
+                    <span>/</span>
+                    <span id="progress-total">0</span>
+                </div>
+                <div class="h-1.5 md:h-2 w-16 md:w-32 bg-white/10 rounded-full overflow-hidden relative shadow-inner">
+                    <div id="progress-bar-fill" class="h-full bg-blue-500 transition-all duration-300 w-0 relative shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LOGIC & DATA -->
+    <script>
+        // --- DATA DOMAIN: HOMEWORK (HOUSE OF GOLD - A1) ---
+        const homeworkData = [
+            { type: 'bGuide', title: 'Homework Assignment', content: 'You have 15 exercises to test your mastery of Future with WILL, Promises, and Vocabulary from "House of Gold". Complete all tasks and screenshot the final result.' },
+            { type: 'bRhythmCheck', question: 'Grammar check: "I ______ buy you a house."', options: ['will', 'am', 'do', 'have'], correct: 0, successMsg: 'Perfect! Use WILL for promises.' },
+            { type: 'bRhythmCheck', question: 'Negative form: "I _______ leave you."', options: ['no will', 'don\'t', 'won\'t', 'willn\'t'], correct: 2, successMsg: 'Correct! "Won\'t" is the negative of WILL.' },
+            { type: 'bCategorization', title: 'Language Sort', items: ['I will help', 'She won\'t go', 'We will win', 'He won\'t stay'], buckets: ['Positive (Will)', 'Negative (Won\'t)'], mapping: [0, 1, 0, 1] },
+            { type: 'bTextInput', question: 'Write a promise to your best friend using WILL.', placeholder: 'Example: I will always help you.', minLength: 8 },
+            { type: 'bRhythmCheck', question: 'Vocabulary: "To take care of someone" means to...', options: ['Ignore them', 'Protect and help them', 'Shout at them', 'Run away'], correct: 1, successMsg: 'Correct! Taking care is an act of love.' },
+            { type: 'bRhythmCheck', question: 'Vocabulary: A "disease" is...', options: ['A type of food', 'An animal', 'An illness or sickness', 'A house'], correct: 2, successMsg: 'Exactly. And a "cure" fixes it.' },
+            { type: 'bCategorization', title: 'Word Order', items: ['I will', 'make you', 'queen', 'of everything'], buckets: ['Start of sentence', 'End of sentence'], mapping: [0, 0, 1, 1] },
+            { type: 'bTextInput', question: 'What will you do tomorrow? Write one sentence.', placeholder: 'Example: Tomorrow, I will study English.', minLength: 10 },
+            { type: 'bRhythmCheck', question: 'Structure: "Will you stay with me?" This is a...', options: ['Question', 'Negative sentence', 'Command', 'Greeting'], correct: 0, successMsg: 'Yes! WILL goes to the beginning in questions.' },
+            { type: 'bDecisionStand', title: 'Reflection', question: 'Is it easy to keep big promises?', labels: ['Very Easy', 'Very Hard'] },
+            { type: 'bCategorization', title: 'True or False?', items: ['"I will to go" is correct', '"I will go" is correct'], buckets: ['Wrong Grammar', 'Right Grammar'], mapping: [0, 1] },
+            { type: 'bRhythmCheck', question: 'Context: Why does he want to buy a "house of gold"?', options: ['He likes the color yellow', 'To show love to his mother', 'Because it is cheap', 'To sell it later'], correct: 1, successMsg: 'Yes! It represents a grand gesture of love.' },
+            { type: 'bTextInput', question: 'Who takes care of you? Write a sentence.', placeholder: 'Example: My mother takes care of me.', minLength: 10 },
+            { type: 'bDecisionStand', title: 'Confidence', question: 'How confident do you feel using WILL for promises now?', labels: ['Need practice', 'I am a master'] },
+            { type: 'bWrap', title: 'Homework Complete' }
+        ];
+
+        const app = {
+            currentIndex: -1, hp: 100, xp: 0, trackData: homeworkData,
+            
+            init() { 
+                this.renderDashboard(); 
+                lucide.createIcons(); 
+            },
+            
+            loadLevel() { 
+                this.currentIndex = 0; 
+                this.hp = 100; this.xp = 0;
+                document.getElementById('status-bar').classList.replace('hidden', 'flex'); 
+                this.renderSlide(); 
+            },
+            
+            goHome() { 
+                this.currentIndex = -1; 
+                document.getElementById('status-bar').classList.replace('flex', 'hidden'); 
+                this.renderDashboard(); 
+            },
+            
+            updateStatus() {
+                document.getElementById('hp-display').innerText = `${this.hp} HP`;
+                document.getElementById('xp-display').innerText = `${this.xp} XP`;
+                
+                // Calculate progress based on 15 exercises (ignoring cover/wrap in calculation if needed)
+                // trackData.length is 16 (1 guide + 14 exercises + 1 wrap). Wait, let's just use generic calculation.
+                const totalExercises = this.trackData.length - 1; // excluding wrap
+                const currentProgress = Math.min(this.currentIndex, totalExercises);
+                
+                const progress = (currentProgress / totalExercises) * 100;
+                document.getElementById('progress-bar-fill').style.width = `${progress}%`;
+                document.getElementById('progress-current').innerText = currentProgress;
+                document.getElementById('progress-total').innerText = totalExercises;
+            },
+            
+            takeDamage(a) { 
+                this.hp = Math.max(0, this.hp - a); this.updateStatus(); 
+                document.getElementById('main-container').classList.add('pulse-red'); 
+                setTimeout(() => document.getElementById('main-container').classList.remove('pulse-red'), 400); 
+            },
+            
+            gainXP(a) { 
+                this.xp += a; this.updateStatus(); 
+                document.getElementById('main-container').classList.add('pulse-blue'); 
+                setTimeout(() => document.getElementById('main-container').classList.remove('pulse-blue'), 400); 
+            },
+            
+            nextSlide() { if (this.currentIndex >= 0 && this.currentIndex < this.trackData.length - 1) { this.currentIndex++; this.renderSlide(); } },
+            prevSlide() { if (this.currentIndex > 0) { this.currentIndex--; this.renderSlide(); } },
+            
+            toggleFullscreen() { 
+                const e = document.documentElement; const i = document.getElementById('fs-icon'); 
+                if (!document.fullscreenElement) { e.requestFullscreen?.() || e.webkitRequestFullscreen?.() || e.msRequestFullscreen?.(); if(i) i.setAttribute('data-lucide', 'minimize'); } 
+                else { document.exitFullscreen?.() || document.webkitExitFullscreen?.() || document.msExitFullscreen?.(); if(i) i.setAttribute('data-lucide', 'maximize'); } 
+                lucide.createIcons(); 
+            },
+            
+            renderDashboard() {
+                document.getElementById('main-container').innerHTML = `
+                    <div class="safe-scroll-wrapper">
+                        <div class="fade-in flex flex-col items-center text-center p-4 w-full max-w-2xl mx-auto">
+                            
+                            <div class="relative mb-6 group">
+                                <div class="absolute inset-0 bg-blue-500 rounded-full blur-[80px] opacity-30 group-hover:opacity-50 transition duration-700"></div>
+                                <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=800&auto=format&fit=crop" class="w-40 h-40 md:w-48 md:h-48 object-cover rounded-full border-[6px] border-blue-500 relative z-10 shadow-[0_0_50px_rgba(59,130,246,0.6)] bg-[#181818]">
+                            </div>
+                            <h1 class="text-4xl md:text-6xl font-black mb-2 uppercase tracking-tighter text-white drop-shadow-md">WOLF <span class="text-blue-500">LABS</span></h1>
+                            <p class="text-white/60 mb-10 text-sm md:text-base font-medium tracking-widest uppercase">UNIT 5: FAMILY & FUTURE (A1)</p>
+                            
+                            <div class="glass-card w-full rounded-3xl p-6 md:p-10 flex flex-col relative border border-white/10 shadow-2xl">
+                                <div class="text-left mb-8">
+                                    <h2 class="text-2xl md:text-3xl font-black text-white mb-2">Homework Module</h2>
+                                    <p class="text-blue-500 font-black text-xs uppercase tracking-widest mb-6">House of Gold</p>
+                                    
+                                    <p class="text-white/80 text-sm md:text-base mb-6 leading-relaxed">Put your knowledge to the test. Complete 15 tasks and prove your mastery.</p>
+
+                                    <div class="flex flex-wrap gap-2.5">
+                                        <span class="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-full border border-blue-500/30 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                                            <i data-lucide="bar-chart" class="w-3 h-3"></i> Nível A1
+                                        </span>
+                                        <span class="bg-white/5 text-white/90 px-4 py-2 rounded-full border border-white/10 text-[10px] font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
+                                            <i data-lucide="clock" class="w-3 h-3"></i> Future: WILL
+                                        </span>
+                                        <span class="bg-white/5 text-white/90 px-4 py-2 rounded-full border border-white/10 text-[10px] font-bold tracking-wider flex items-center gap-1.5 shadow-sm">
+                                            <i data-lucide="edit-3" class="w-3 h-3"></i> 15 Exercises
+                                        </span>
+                                    </div>
+                                </div>
+                                <button onclick="app.loadLevel()" class="btn-start-epic px-6 py-5 rounded-2xl font-black text-lg w-full flex items-center justify-center gap-3">
+                                    <i data-lucide="power" class="w-5 h-5 fill-current"></i> START HOMEWORK
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            },
+            
+            renderSlide() {
+                this.updateStatus();
+                if (this.currentIndex < 0) return;
+                const s = this.trackData[this.currentIndex];
+                let h = '';
+                
+                switch(s.type) {
+                    case 'bGuide': 
+                        h = `
+                        <div class="text-center w-full max-w-xl mx-auto flex flex-col items-center px-4">
+                            <div class="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/50 mb-6 shadow-[0_0_30px_rgba(59,130,246,0.3)]">
+                                <i data-lucide="info" class="w-10 h-10 text-blue-500"></i>
+                            </div>
+                            <h2 class="text-3xl md:text-5xl font-black mb-6 tracking-tight">${s.title}</h2>
+                            <div class="glass-card p-6 md:p-10 rounded-3xl text-base md:text-lg text-white/90 leading-relaxed border-t-4 border-t-blue-500 w-full shadow-2xl">${s.content}</div>
+                            <button onclick="app.nextSlide()" class="mt-8 btn-start-epic w-full max-w-xs py-4 rounded-xl font-black uppercase text-sm flex justify-center items-center gap-2">Proceed <i data-lucide="arrow-right" class="w-5 h-5"></i></button>
+                        </div>`; 
+                        break;
+                    
+                    case 'bRhythmCheck': 
+                        h = `
+                        <div class="w-full max-w-2xl flex flex-col gap-6 mx-auto px-4">
+                            <div class="glass-card p-6 md:p-8 rounded-3xl text-xl md:text-2xl font-black border-l-4 border-l-blue-500 shadow-xl leading-snug">${s.question}</div>
+                            <div class="flex flex-col gap-3">
+                                ${s.options.map((o,i)=>`
+                                    <button onclick="window.check(${i})" id="opt-${i}" class="r-btn p-4 rounded-2xl bg-white/5 border border-white/10 font-bold text-left hover:bg-blue-500/20 transition-all flex items-center gap-4">
+                                        <div class="w-8 h-8 rounded-full bg-black/50 border border-white/10 flex items-center justify-center shrink-0 text-blue-500 font-black text-xs">${String.fromCharCode(65+i)}</div>
+                                        <span class="text-sm md:text-base text-white/90">${o}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div id="fb" class="h-12 text-center font-bold flex items-center justify-center w-full"></div>
+                        </div>`; 
+                        window.check=(i)=>{ 
+                            const b=document.getElementById(`opt-${i}`); 
+                            document.querySelectorAll('.r-btn').forEach(btn => btn.disabled = true);
+                            if(i===s.correct){ 
+                                b.classList.add('bg-blue-500','border-blue-500','!text-white'); 
+                                b.querySelector('div').classList.add('!bg-white','text-blue-500');
+                                app.gainXP(50); 
+                                document.getElementById('fb').innerHTML = `<div class="fade-in bg-blue-500/20 text-blue-400 px-6 py-3 rounded-xl border border-blue-500/30 flex items-center gap-3"><i data-lucide="check-circle" class="w-5 h-5"></i> ${s.successMsg}</div>`; 
+                                lucide.createIcons();
+                                setTimeout(()=>app.nextSlide(), 1500); 
+                            } else { 
+                                b.classList.add('!bg-red-500/20','!border-red-500/50'); 
+                                b.querySelector('div').classList.add('!text-red-500');
+                                app.takeDamage(20); 
+                                document.getElementById('fb').innerHTML = `<div class="fade-in text-red-400 px-6 py-3 rounded-xl flex items-center gap-2"><i data-lucide="x-circle" class="w-5 h-5"></i> Incorrect. Try again.</div>`;
+                                lucide.createIcons();
+                                setTimeout(() => { document.querySelectorAll('.r-btn').forEach(btn => btn.disabled = false); }, 1000);
+                            } 
+                        }; 
+                        break;
+                    
+                    case 'bCategorization': 
+                        h = `
+                        <div class="w-full max-w-4xl mx-auto flex flex-col items-center gap-6 px-4">
+                            <h3 class="text-2xl md:text-4xl font-black text-center leading-tight mb-2">${s.title}</h3>
+                            <p class="text-xs md:text-sm text-white/50 font-medium text-center hidden md:block">Select a phrase, then tap the correct sector below.</p>
+                            <p class="text-xs text-white/50 font-medium text-center md:hidden">Tap phrase, then tap box.</p>
+                            
+                            <div id="words" class="flex flex-wrap justify-center gap-3 p-6 glass-card rounded-3xl w-full shadow-inner min-h-[100px]">
+                                ${s.items.map((it,i)=>`<div id="w-${i}" onclick="window.selW(this,${i})" class="word-chip px-6 py-3 text-sm md:text-base tracking-wide">${it}</div>`).join('')}
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 md:gap-8 w-full mt-4">
+                                ${s.buckets.map((b,i)=>`
+                                    <div onclick="window.selB(${i}, event)" class="drop-zone glass-card min-h-[160px] md:min-h-[220px] rounded-3xl flex flex-col items-center justify-center p-4 text-center cursor-pointer">
+                                        <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-3 pointer-events-none">
+                                            <i data-lucide="inbox" class="w-5 h-5 text-white/50"></i>
+                                        </div>
+                                        <span class="text-sm md:text-xl font-black text-white mb-2 pointer-events-none">${b}</span>
+                                        <span class="text-[10px] uppercase font-bold text-white/30 pointer-events-none mb-4">Drop selection here</span>
+                                        <div id="c-${i}" class="flex flex-wrap gap-2 justify-center w-full z-10 pointer-events-none"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div id="cat-feedback" class="w-full h-12 mt-2 flex items-center justify-center"></div>
+                        </div>`; 
+                        
+                        window.activeW = null; 
+                        window.selW=(el,i)=>{ 
+                            if(el.classList.contains('opacity-50')) return;
+                            document.querySelectorAll('.word-chip').forEach(c=>c.classList.remove('selected')); 
+                            el.classList.add('selected'); 
+                            window.activeW={el,i}; 
+                        }; 
+                        window.selB=(bi,ev)=>{ 
+                            if(!window.activeW) return; 
+                            if(s.mapping[window.activeW.i]===bi){ 
+                                document.getElementById(`c-${bi}`).appendChild(window.activeW.el); 
+                                window.activeW.el.classList.replace('bg-blue-500','bg-white/10'); 
+                                window.activeW.el.classList.remove('selected', 'word-chip');
+                                window.activeW.el.onclick=null; 
+                                window.activeW.el.classList.add('opacity-50', 'border', 'border-white/20', 'px-4', 'py-2', 'rounded-full', 'text-xs', 'font-bold');
+                                
+                                const targetZone = ev.currentTarget;
+                                targetZone.classList.add('filled');
+                                
+                                app.gainXP(20); 
+                                window.activeW=null; 
+                                
+                                if(document.querySelectorAll('#words > div').length===0) {
+                                    document.getElementById('cat-feedback').innerHTML = `<div class="fade-in text-blue-500 font-black uppercase tracking-widest flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> Sorted! +XP</div>`;
+                                    lucide.createIcons();
+                                    setTimeout(()=>app.nextSlide(), 1200); 
+                                }
+                            } else { 
+                                app.takeDamage(10); 
+                                const targetZone = ev.currentTarget;
+                                targetZone.classList.add('pulse-red', '!border-red-500');
+                                setTimeout(() => targetZone.classList.remove('pulse-red', '!border-red-500'), 500);
+                            } 
+                        }; 
+                        break;
+
+                    case 'bTextInput': 
+                        h = `
+                        <div class="w-full max-w-lg px-2 flex flex-col gap-6 mx-auto">
+                            <div class="bg-blue-500/20 w-16 h-16 rounded-full flex items-center justify-center border border-blue-500/50 shadow-lg mx-auto mb-2">
+                                <i data-lucide="edit-3" class="w-8 h-8 text-blue-500"></i>
+                            </div>
+                            <h3 class="text-2xl md:text-3xl font-black text-center leading-tight">${s.question}</h3>
+                            <div class="glass-card p-4 md:p-6 rounded-3xl w-full mt-2 shadow-2xl relative">
+                                <textarea id="hwi" class="w-full bg-black/40 border border-white/10 p-5 rounded-2xl text-base md:text-lg text-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all min-h-[160px] resize-none" placeholder="${s.placeholder}"></textarea>
+                                <button id="hw-sub-btn" onclick="window.subH()" class="w-full mt-4 bg-blue-500 py-4 rounded-xl font-black uppercase text-sm shadow-xl flex items-center justify-center gap-2 transition-all text-white">Submit Answer <i data-lucide="send" class="w-4 h-4"></i></button>
+                                <div id="hw-fb" class="hidden mt-4 w-full"></div>
+                            </div>
+                        </div>`; 
+                        window.subH=()=>{ 
+                            const v=document.getElementById('hwi').value.trim(); 
+                            if(v.length >= (s.minLength||10)){ 
+                                app.gainXP(100); 
+                                document.getElementById('hwi').disabled = true;
+                                document.getElementById('hwi').classList.add('opacity-50');
+                                document.getElementById('hw-sub-btn').classList.add('hidden');
+                                
+                                const fb = document.getElementById('hw-fb');
+                                fb.classList.remove('hidden');
+                                fb.innerHTML = `
+                                    <div class="fade-in bg-blue-500/20 border border-blue-500/30 p-4 rounded-xl flex flex-col items-center justify-center gap-3">
+                                        <div class="flex items-center gap-2 text-white font-bold"><i data-lucide="check-circle" class="w-5 h-5 text-blue-500"></i> Recorded successfully!</div>
+                                        <button onclick="app.nextSlide()" class="w-full bg-white text-black font-black py-3 rounded-lg text-sm uppercase">Next Exercise</button>
+                                    </div>
+                                `;
+                                lucide.createIcons();
+                            } else { 
+                                const ta = document.getElementById('hwi');
+                                ta.classList.add('border-red-500', 'ring-1', 'ring-red-500'); 
+                                setTimeout(()=>{ta.classList.remove('border-red-500', 'ring-1', 'ring-red-500');}, 1000); 
+                            } 
+                        }; 
+                        break;
+
+                    case 'bDecisionStand': 
+                        h = `
+                        <div class="w-full max-w-3xl mx-auto px-4 flex flex-col items-center gap-8">
+                            <h3 class="text-3xl md:text-4xl font-black text-center leading-tight">${s.question}</h3>
+                            <div class="glass-card w-full p-8 md:p-12 rounded-3xl relative">
+                                <div id="sv" class="text-6xl font-black text-blue-500 text-center mb-10 drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]">50%</div>
+                                <div class="relative w-full">
+                                    <input type="range" oninput="document.getElementById('sv').innerText=this.value+'%'" class="w-full absolute inset-0 z-10 opacity-0 cursor-pointer">
+                                    <div class="w-full h-2 bg-white/10 rounded-full pointer-events-none"></div>
+                                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.8)] pointer-events-none transition-all duration-75" style="left: 50%" id="fake-thumb"></div>
+                                </div>
+                                <script>
+                                    document.querySelector('input[type=range]').addEventListener('input', function(e) {
+                                        document.getElementById('fake-thumb').style.left = e.target.value + '%';
+                                    });
+                                <\/script>
+                                <div class="flex justify-between text-[10px] md:text-xs uppercase font-black text-white/40 mt-8">
+                                    <span class="max-w-[40%] text-left leading-tight">${s.labels[0]}</span>
+                                    <span class="max-w-[40%] text-right leading-tight">${s.labels[1]}</span>
+                                </div>
+                            </div>
+                            <button onclick="app.gainXP(150); app.nextSlide();" class="btn-start-epic w-full max-w-xs py-4 px-10 rounded-full font-black uppercase flex items-center justify-center gap-2 text-base shadow-xl">
+                                Lock Choice <i data-lucide="check" class="w-4 h-4"></i>
+                            </button>
+                        </div>`; 
+                        break;
+                    
+                    case 'bWrap': 
+                        h = `
+                        <div class="flex flex-col items-center text-center p-4 w-full max-w-lg min-h-[70vh] justify-center mx-auto">
+                            <div class="relative w-32 h-32 flex items-center justify-center mb-6">
+                                <div class="absolute inset-0 bg-blue-500 rounded-full opacity-30 animate-pulse blur-xl"></div>
+                                <div class="w-24 h-24 bg-[#181818] border-4 border-blue-500 rounded-full flex items-center justify-center relative z-10 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+                                    <i data-lucide="award" class="w-12 h-12 text-blue-500"></i>
+                                </div>
+                            </div>
+                            <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-8 text-white drop-shadow-lg">Masterpiece!</h2>
+                            
+                            <div class="bg-blue-600/20 border-2 border-blue-500 p-6 md:p-8 rounded-3xl shadow-2xl animate-pulse mb-10 w-full backdrop-blur-md relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-bl-full"></div>
+                                <i data-lucide="camera" class="w-10 h-10 md:w-12 md:h-12 text-blue-400 mx-auto mb-4 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]"></i>
+                                <h3 class="text-2xl font-black uppercase mb-2 text-white tracking-wide">📸 Tire um print!</h3>
+                                <p class="font-bold text-white/80 text-sm md:text-base">E envie o resultado pro seu professor.</p>
+                            </div>
+                            
+                            <div class="flex gap-4 w-full mb-10">
+                                <div class="glass-card p-5 rounded-2xl flex-1 border border-white/5">
+                                    <p class="text-[10px] md:text-xs uppercase font-black text-white/40 mb-1">Final HP</p>
+                                    <p class="text-3xl md:text-4xl font-black text-white">${app.hp}</p>
+                                </div>
+                                <div class="glass-card p-5 rounded-2xl border-t-4 border-blue-500 shadow-[0_10px_30px_rgba(59,130,246,0.15)]">
+                                    <p class="text-[10px] md:text-xs uppercase font-black text-white/40 mb-1">Total XP</p>
+                                    <p class="text-3xl md:text-4xl font-black text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">${app.xp}</p>
+                                </div>
+                            </div>
+                            
+                            <button onclick="app.goHome()" class="text-white/40 font-bold uppercase text-[10px] tracking-widest hover:text-white transition flex items-center gap-2"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> Back to Dashboard</button>
+                        </div>`;
+                        break;
+                }
+
+                document.getElementById('main-container').innerHTML = `
+                    <div class="safe-scroll-wrapper">
+                        <div class="w-full flex flex-col justify-center items-center fade-in max-w-6xl mx-auto">
+                            ${h}
+                        </div>
+                    </div>
+                `;
+                
+                lucide.createIcons();
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
